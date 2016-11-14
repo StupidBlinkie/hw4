@@ -11,8 +11,8 @@ class gameDef{
  	//gameDefinition();
 
  	int gameID;
- 	array2d extensionColor;
-	array2d boardState;
+ 	Array2dPtr extensionColor;
+	Array2dPtr boardState;
 	int movesAllowed;
  	int colors;
 
