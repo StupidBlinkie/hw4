@@ -58,14 +58,18 @@ inline void gameDef::set_extensionColor(int rows, int cols,int* data_from_json){
 	//deep copy data. (to-do: try std::vetor<int>? check if data is valid)
 	extensionColor_row = rows;
 	extensionColor_col = cols;
-	internal_extencolor = (int*)malloc(rows * cols * sizeof(void*));
-
+	internal_extencolor = (int*)malloc(rows * cols * sizeof(int));
+	cout << "allocated space for int*" << endl;
 	for(int i=0; i<rows*cols; i++){
 		internal_extencolor[i] = data_from_json[i];
+		cout << internal_extencolor[i];
 	}
+	cout << "copied data from prev int*" << endl;
 	//free(data_from_json);
 
 	//fill 2d array
+	extensionColor = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+	
 	for (int r=0; r<rows; r++) {
 	  for (int c=0; c<cols; c++) {
 	       A2d_FillArray2d(extensionColor, r, c, &internal_extencolor[r * cols + c]);
@@ -76,13 +80,15 @@ inline void gameDef::set_extensionColor(int rows, int cols,int* data_from_json){
 inline void gameDef::set_boardState(int rows, int cols,int* data_from_json){
 	boardState_row = rows;
 	boardState_col = cols;
-	internal_boardstate = (int*)malloc(rows * cols * sizeof(void*));
+	internal_boardstate = (int*)malloc(rows * cols * sizeof(int));
 
 	for(int i=0; i<rows*cols; i++){
 		internal_boardstate[i] = data_from_json[i];
 	}
 	//free(data_from_json);
 
+	boardState = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+	
 	//fill 2d array
 	for (int r=0; r<rows; r++) {
 	  for (int c=0; c<cols; c++) {
@@ -103,11 +109,13 @@ inline void gameDef::free_extensionColor(){
   A2d_FreeArray2d(extensionColor, NULL);  //modify a2d free function?
   free(extensionColor->storage);
   free(extensionColor);
+  free(internal_extencolor);
 }
 inline void gameDef::free_boardState(){
   A2d_FreeArray2d(extensionColor, NULL);  //modify a2d free function?
   free(boardState->storage);
   free(boardState);
+  free(internal_boardstate);
 }
 
 

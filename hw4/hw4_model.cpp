@@ -83,27 +83,25 @@ int main(int argc, char** argv){
 
 
 void deserialize2dArray(json_t *json, bool reading_first_array){
-    void * itr = json_object_iter(json);  
     //read rows
-    json_t* json_row = json_object_iter_value(itr);
+  json_t* json_row = json_object_get(json, "rows");
     int rows = json_integer_value(json_row); 
     //read cols
-    itr = json_object_iter_next(json, itr);
-    json_t* json_col = json_object_iter_value(itr);
+    json_t* json_col = json_object_get(json, "columns");
     int cols = json_integer_value(json_col);
 
-    cout << "rows and cols are" << row << ", " << col << endl;
+    cout << "rows and cols are" << rows << ", " << cols << endl;
 
     //read json array
-    itr = json_object_iter_next(json, itr);
-    json_t* json_data = json_object_iter_value(itr);
+    json_t* json_data = json_object_get(json, "data");
 
     //store in an int array
     int* data = (int*)malloc(rows * cols *sizeof(int));
         for (size_t i = 0; i < json_array_size(json_data); i++) {
             data[i] = json_integer_value(json_array_get(json_data, i));
+	    cout<< data[i] << endl;
     }
-
+	cout << "made it past for loop" << endl;
     //load to different fileds of g_def
     if (reading_first_array){
       g_def->set_extensionColor(rows, cols, data);
@@ -111,7 +109,8 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
     else {
       g_def->set_boardState(rows,cols,data);
     }
-
+    cout << "made it past if else" << endl;
+    
     //g_def set functions deep copied the data, so free immediately after use
     free(data); 
 }
@@ -121,29 +120,31 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
 void deserialize(char* file, gameDef* g_def){
 
     json_t* json = json_load_file(file, JSON_COMPACT, NULL);
-    void * itr = json_object_iter(json);
 
+    json_t* gamedef_json = json_object_get(json, "gamedef");
+    if (gamedef_json == NULL) {
+      cout << "did not find gamedef" << endl;
+    }
 
-    json_t *extension = json_object_iter_value(itr);
+    json_t *extension = json_object_get(gamedef_json, "extensioncolor");
+    if (extension == NULL) {
+      cout << "did not find extensioncolor" << endl;
+    }
     deserialize2dArray(extension, 1); //1 and 0 to indicate if reading first or second array
 
     //iterate to boardstate field
-    itr = json_object_iter_next(json, itr); 
-    json_t *boardstate = json_object_iter_value(itr);
+    json_t *boardstate = json_object_get(gamedef_json, "boardstate");
     deserialize2dArray(boardstate, 0);
     
     //iterate to moves allowed
-    itr = json_object_iter_next(json, itr); 
-    int movesAllowed = json_integer_value(json_object_iter_value(itr));
+    int movesAllowed = json_integer_value(json_object_get(gamedef_json, "movesallowed"));
 
     //iterate to id
-    itr = json_object_iter_next(json, itr); 
-    int id = json_integer_value(json_object_iter_value(itr));
+    int id = json_integer_value(json_object_get(gamedef_json, "gameid"));
 
     //iterate to color
-    itr = json_object_iter_next(json, itr); 
-    int colors = json_integer_value(json_object_iter_value(itr));
-
+    int colors = json_integer_value(json_object_get(gamedef_json, "colors"));
+    json_decref(json);
     g_def->set_gameID(id);
     g_def->set_movesAllowed(movesAllowed);
     g_def->set_colors(colors);
