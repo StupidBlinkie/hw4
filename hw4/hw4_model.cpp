@@ -9,6 +9,7 @@ using namespace std;
 //Global temp data for deserialize
 //-------goes to gamedef object
 int* extensionArr;
+std::vector<int> extensionColor;
 int* initBoardStateArr;
 int gameID;
 int movesAllowed;
@@ -43,18 +44,16 @@ int main(int argc, char** argv){
   
   deserialize(argv[1], g_def);
 
-
-
-  for (int r = 0; r<8; r++){
-    for (int c = 0; c<2; c++){
+  for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
+    for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
       //cout << "reteriving row: " << r << " col: " << c <<endl;
       void * temp = g_def->get_extensionColor_element(r, c);
       cout << "data: " << *(int*)temp <<endl;
     }
   }   
   cout << "-----------" <<endl;
-  for (int r = 0; r<2; r++){
-    for (int c = 0; c<2; c++){
+  for (int r = 0; r< g_def->get_boardState_rows(); r++){
+    for (int c = 0; c< g_def->get_boardState_cols(); c++){
       void * temp = g_def->get_boardState_element(r, c);
       cout << "boardState_data: " << *(int*)temp <<endl;
     }
@@ -65,36 +64,56 @@ int main(int argc, char** argv){
   return 0;
 }
 
+//********......notes.....*******//
+//I modified gamedef class, it should prevent leaks from deserialzation now
+//however I didn't figure out how you read data from json file, I think I 
+//messed up with the iterator order..
+//so basically I want to read in the following order..(same as 25by5.json)
+//extension color 2da --> 
+// board state 2da --> 
+// movesAllowed -->
+// gameid -->
+// colors
+
+// Can you look at the deserialize function and modify the iterating order?
+// I'm little confused. 
+// the rows and cols I extract from json are both 0. I must used the jansson
+// methods wrong.
 
 
-int* deserializeIntegerArray2d(json_t *json){
-    void * itr = json_object_iter(json);
-    
+
+void deserialize2dArray(json_t *json, bool reading_first_array){
+    void * itr = json_object_iter(json);  
     //read rows
     json_t* json_row = json_object_iter_value(itr);
-    int rows = json_integer_value(json_row);
-    row = rows;
-    
+    int rows = json_integer_value(json_row); 
     //read cols
     itr = json_object_iter_next(json, itr);
     json_t* json_col = json_object_iter_value(itr);
     int cols = json_integer_value(json_col);
-    col = cols;
-    //  cout << "rows and cols are" << *row << ", " << *col << endl;
 
-    //read array
+    cout << "rows and cols are" << row << ", " << col << endl;
+
+    //read json array
     itr = json_object_iter_next(json, itr);
     json_t* json_data = json_object_iter_value(itr);
 
-
-    
+    //store in an int array
     int* data = (int*)malloc(rows * cols *sizeof(int));
-    //store in an array
-    for (size_t i = 0; i < json_array_size(json_data); i++) {
-        data[i] = json_integer_value(json_array_get(json_data, i));
+        for (size_t i = 0; i < json_array_size(json_data); i++) {
+            data[i] = json_integer_value(json_array_get(json_data, i));
     }
-    
-    return data;
+
+    //load to different fileds of g_def
+    if (reading_first_array){
+      g_def->set_extensionColor(rows, cols, data);
+    }
+    else {
+      g_def->set_boardState(rows,cols,data);
+    }
+
+    //g_def set functions deep copied the data, so free immediately after use
+    free(data); 
 }
 
 
@@ -103,60 +122,31 @@ void deserialize(char* file, gameDef* g_def){
 
     json_t* json = json_load_file(file, JSON_COMPACT, NULL);
     void * itr = json_object_iter(json);
-    
-    json_t* gameDef = json_object_iter_value(itr);
-    
-    void *gameDefItr = json_object_iter(gameDef);
-    gameID = json_integer_value(json_object_iter_value(gameDefItr));
-    
-    gameDefItr = json_object_iter_next(gameDef, gameDefItr);
-    
-    json_t *extension = json_object_iter_value(gameDefItr);
-    extensionArr = deserializeIntegerArray2d(extension);
-    
-    cout << "before set extension color.. row, col are " << row << " "<< col <<endl; 
-    g_def->set_extensionColor(row, col, extensionArr);
-    ////////////////////////
-    
-    gameDefItr = json_object_iter_next(gameDef, gameDefItr);
-    json_t *initBS = json_object_iter_value(gameDefItr);
-    initBoardStateArr = deserializeIntegerArray2d(initBS);  
-    gameDefItr = json_object_iter_next(gameDef, gameDefItr); 
-    movesAllowed = json_integer_value(json_object_iter_value(gameDefItr));
-    gameDefItr = json_object_iter_next(gameDef, gameDefItr); 
-    colors = json_integer_value(json_object_iter_value(gameDefItr));
-    itr = json_object_iter_next(json, itr);
 
 
-    cout << "before set board state.. row, col are " << row << " "<< col <<endl; 
-    g_def->set_boardState(row, col, initBoardStateArr);
+    json_t *extension = json_object_iter_value(itr);
+    deserialize2dArray(extension, 1); //1 and 0 to indicate if reading first or second array
 
+    //iterate to boardstate field
+    itr = json_object_iter_next(json, itr); 
+    json_t *boardstate = json_object_iter_value(itr);
+    deserialize2dArray(boardstate, 0);
+    
+    //iterate to moves allowed
+    itr = json_object_iter_next(json, itr); 
+    int movesAllowed = json_integer_value(json_object_iter_value(itr));
 
-   json_t *gameState = json_object_iter_value(itr);
-   void *gameStateItr = json_object_iter(gameState);
-   
-  // json_t *boardcandies = json_object_itr_value(gameStateItr);
-  // candyArr = deserializeCandyArray2d(boardcandies);
-   
-   gameStateItr = json_object_iter_next(gameState, gameStateItr);
-   json_t *currentBS = json_object_iter_value(gameStateItr);
-   currBoardStateArr = deserializeIntegerArray2d(currentBS);
-   gameStateItr = json_object_iter_next(gameState, gameStateItr);
-   movesMade =json_integer_value(json_object_iter_value(gameStateItr));
-   gameStateItr = json_object_iter_next(gameState, gameStateItr); 
-   currScore =json_integer_value(json_object_iter_value(gameStateItr));
-   
-   g_def->set_gameID(gameID);
-   g_def->set_movesAllowed(movesAllowed);
-   g_def->set_colors(colors);
-   // gameStateItr = json_object_iter_next(gameState, gameStateItr);
-//    extensionOffset = (int*) malloc(currBoardStateArr->cols * sizeof(int));
-//    
-//    json_t *extensionOffsetArr = json_object_itr_value(gameStateItr);
-//    
-//    for (size_t i = 0; i < json_array_size(extensionOffsetArr); i++) {
-//        extensionOffset[i] = json_integer_value(json_array_get(extensionOffsetArr, i));
-//    }
+    //iterate to id
+    itr = json_object_iter_next(json, itr); 
+    int id = json_integer_value(json_object_iter_value(itr));
+
+    //iterate to color
+    itr = json_object_iter_next(json, itr); 
+    int colors = json_integer_value(json_object_iter_value(itr));
+
+    g_def->set_gameID(id);
+    g_def->set_movesAllowed(movesAllowed);
+    g_def->set_colors(colors);
 }
 
 
