@@ -6,25 +6,10 @@
 using namespace std;
 
 
-//Global temp data for deserialize
-//-------goes to gamedef object
-int* extensionArr;
-std::vector<int> extensionColor;
-int* initBoardStateArr;
-int gameID;
-int movesAllowed;
-int colors;
-int row, col;
 
-//-----goes to gamestate object-------------//
-int movesMade;
-int currScore;
-int *extensionOffset;
-int* currBoardStateArr;
 
 gameDef* g_def;
 gameState* g_state;
-
 //--------------------------------------------//
 
 
@@ -32,27 +17,51 @@ gameState* g_state;
 
 int main(int argc, char** argv){
 
-  // std::vector<int> color;
-  // std::vector<int> state;
-  // color = {0, 1, 2, 3, 4, 5,
-  //               0, 1, 2, 3, 4, 5,
-  //               0, 1, 2, 3};
-  // state = {1,1,1,1};
-
-   g_def = new gameDef();
-   g_state = new gameState();
-   g_state->initialize(g_def);
 
 
+  g_def = new gameDef();
+  deserialize(argv[1], g_def);
 
-   cout<< c->get_type() << c->get_color() << endl;
+  for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
+    for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
+      //cout << "reteriving row: " << r << " col: " << c <<endl;
+      void * temp = g_def->get_extensionColor_element(r, c);
+      cout << " " << *(int*)temp;
+    }
+  }   
+  cout << "-----------" <<endl;
+  for (int r = 0; r< g_def->get_boardState_rows(); r++){
+    for (int c = 0; c< g_def->get_boardState_cols(); c++){
+      void * temp = g_def->get_boardState_element(r, c);
+      cout << " " << *(int*)temp;
+    }
+  } 
+ cout << "-----------" <<endl;
+
+ g_state = new gameState();
+ g_state -> initialize(g_def);
 
 
-   
   delete g_def;
-  delete c;
+  delete g_state;
+
+  
   return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void deserialize2dArray(json_t *json, bool reading_first_array){
     //read rows
@@ -62,7 +71,7 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
     json_t* json_col = json_object_get(json, "columns");
     int cols = json_integer_value(json_col);
 
-    cout << "rows and cols are" << rows << ", " << cols << endl;
+    //cout << "rows and cols are" << rows << ", " << cols << endl;
 
     //read json array
     json_t* json_data = json_object_get(json, "data");
@@ -72,7 +81,7 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
         for (size_t i = 0; i < json_array_size(json_data); i++) {
             data[i] = json_integer_value(json_array_get(json_data, i));
     }
-	cout << "made it past for loop" << endl;
+	
     //load to different fileds of g_def
     if (reading_first_array){
       g_def->set_extensionColor(rows, cols, data);
@@ -80,7 +89,7 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
     else {
       g_def->set_boardState(rows,cols,data);
     }
-    cout << "made it past if else" << endl;
+    //cout << "made it past if else" << endl;
     
     //g_def set functions deep copied the data, so free immediately after use
     free(data); 
@@ -120,9 +129,3 @@ void deserialize(char* file, gameDef* g_def){
     g_def->set_movesAllowed(movesAllowed);
     g_def->set_colors(colors);
 }
-
-
-
-
-
-

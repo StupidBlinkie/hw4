@@ -9,24 +9,6 @@ extern "C"{
     #include "../jansson/include/jansson.h"
 }
 
-class candy{
-public:
-  candy(int t, int c);
-    int get_type() const {return type;}
-    int get_color() const {return color;}
-    void set_type(int t)  { type = t;}
-    void set_color(int c) { color = c;}
-private:
-	int type;
-	int color;
-};
-inline candy::candy(int t, int c){
-  type = t;
-  color = c;
-}
-
-
-
 
 
 class gameDef{
@@ -74,12 +56,12 @@ inline void gameDef::set_extensionColor(int rows, int cols,int* data_from_json){
 	extensionColor_row = rows;
 	extensionColor_col = cols;
 	internal_extencolor = (int*)malloc(rows * cols * sizeof(int));
-	cout << "allocated space for int*" << endl;
+	//cout << "allocated space for int*" << endl;
 	for(int i=0; i<rows*cols; i++){
 		internal_extencolor[i] = data_from_json[i];
-		cout << internal_extencolor[i];
+		//cout << internal_extencolor[i];
 	}
-	cout << "copied data from prev int*" << endl;
+	//cout << "copied data from prev int*" << endl;
 	//free(data_from_json);
 
 	//fill 2d array
@@ -120,31 +102,49 @@ inline void* gameDef::get_boardState_element(int row, int col){
 	return A2d_GetElement(boardState, row, col);
 }
 
-inline void gameDef::free_extensionColor(){
-  A2d_FreeArray2d(extensionColor, NULL);  //modify a2d free function?
+inline void gameDef::free_extensionColor(){ 
   free(extensionColor->storage);
   free(extensionColor);
   free(internal_extencolor);
 }
 inline void gameDef::free_boardState(){
-  A2d_FreeArray2d(extensionColor, NULL);  //modify a2d free function?
   free(boardState->storage);
   free(boardState);
   free(internal_boardstate);
 }
 
 
-
 inline gameDef::~gameDef(void){
-	cout << "Object is being deleted" << endl;
-	free_extensionColor();  //adding this.. 16 direct loss, 32 indirect
-	free_boardState(); // adding this.. 0 lost, 0 indirect lost, still has errors
+	cout << "gameDef Object is being deleted" << endl;
+	free_extensionColor();  
+	free_boardState();
 }
 
 
 
+//----------------Candy Class-------------------//
 
 
+class candy{
+public:
+    candy(int t, int c);
+    int get_type() const {return type;}
+    int get_color() const {return color;}
+    void set_type(int t)  { type = t;}
+    void set_color(int c) { color = c;}
+private:
+	int type;
+	int color;
+};
+inline candy::candy(int t, int c){
+  type = t;
+  color = c;
+};
+
+
+
+
+//----------------game state class-------------------//
 class gameState{
 	private: 
 		int rows, cols;
@@ -153,8 +153,8 @@ class gameState{
 		int currScore = 0;
 		int* extensionOffset;
 
-		int* internal_extencolor;
-		int* internal_boardstate;
+		//int* internal_extencolor; //not used
+		int* internal_boardState;
 		candy** internal_boardCandies; // internal candy array 
 
 		Array2dPtr boardCandies;
@@ -169,56 +169,87 @@ class gameState{
 		int get_gameID()	{return gameID; }	
 
 		void initialize(gameDef* &g_def);	
-		void update();
+		//void update();
+
+		void free_gameState();
+		~gameState(void);
 	
 };
 
 
 inline void gameState::initialize(gameDef* &g_def){
-	int rows = g_def->get_boardState_rows();
-	int cols = g_def->get_boardState_cols();
+	rows = g_def->get_boardState_rows();
+	cols = g_def->get_boardState_cols();
 
-	//initialize offset array
-	extensionOffset = (int*)malloc(rows * cols * sizeof(int));
+	cout << "[gameState initialize]---rows, cols .."<< rows <<", "<< cols << endl;
+
+	//STEP 1: initialize 
+	extensionOffset = (int*)malloc(rows * sizeof(int));
 	internal_boardCandies = (candy**)malloc(rows * cols * sizeof(candy*));
+	internal_boardState= (int*)malloc(rows * cols * sizeof(int));
 
-
-
-	//create canides and store in internal serial array storage
+	//STEP 2: create canides and store in internal serial array storages
 	for(int r=0; r<rows; r++){
 		for (int c = 0; c<cols; c++){
 		  int color = *(int*)g_def->get_extensionColor_element(r, c);
 		  int type = *(int*)g_def->get_boardState_element(r,c);
-		  candy* ca = new candy(type, color);
-		  internal_boardCandies[ r * cols + c] = ca;   //new candy object with color and type
+		  
+		//allocate memeory on heap for each candy, remember to free
+		  internal_boardCandies[r * cols + c] = new candy(type, color); 
+		  internal_boardState[r * cols + c] = type;
+		  //cout << "[gameState initialize]-- internal candy array.. type & color ---" << internal_boardCandies[ r * cols + c]->get_type() << " "<< internal_boardCandies[ r * cols + c]->get_color() << endl;
 		}
 	}
 
-	//load to boardCandies 2d array
+	//STEP 3: load to boardCandies and boardState 2d arrays
 	boardCandies = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+	boardState = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+
 	for (int r=0; r<rows; r++) {
 	  for (int c=0; c<cols; c++) {
-	       A2d_FillArray2d(boardCandies, r, c, &internal_boardCandies[r * cols + c]);
-	   }
+	       A2d_FillArray2d(boardCandies, r, c, internal_boardCandies[r * cols + c]);
+	       A2d_FillArray2d(boardState, r, c, &internal_boardState[r * cols + c]);
+		
+
+		//test (no need to dereference, it's already a candy pointer)
+		candy* temp = (candy*)A2d_GetElement(boardCandies, r , c );
+		int tem = *(int*)A2d_GetElement(boardState, r , c );
+		 cout << "[gameState initialize]-- candy 2d array.. type & color ---" << temp->get_type() << " "<< temp->get_color() << endl;
+		 cout << "[gameState initialize]-- state 2d array..  ---" << tem << endl;
+		}
 	}
+
 }
 
 
 
 
 
+//destructor
+inline gameState::~gameState(void){
+	free(extensionOffset);	
 
-
-
-
-
-
-
-
+	free(boardCandies->storage);
+	free(boardCandies);
+	for (int r=0; r<rows; r++) {
+	  for (int c=0; c<cols; c++) {
+	   //cout<< internal_boardCandies[r * cols + c]->get_type() << internal_boardCandies[r * cols + c]->get_color()<< endl;
+	    //free(internal_boardCandies[r * cols + c]);
+	   delete internal_boardCandies[r * cols + c];  //use delete instead of free for objects
+         }
+	}
+	free(internal_boardCandies);
+	
+	free(boardState->storage);
+	free(boardState);
+	free(internal_boardState);
+	cout << "gamestate Object is being deleted" << endl;
+}
 
 
 
 void deserialize2dArray(json_t *json, bool reading_first_array);
 void deserialize(char* file, gameDef* g_def);
+
 
 #endif // _HW4_MODEL_H_
