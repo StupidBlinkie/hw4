@@ -1,6 +1,6 @@
 CC=g++
 
-SRC=hw4_model.cpp
+SRC=hw4_view.cpp hw4_model.cpp
 HEADERS= hw4_model.h
 
 LIBS=../hw2/libhw2.a

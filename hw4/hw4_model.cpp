@@ -12,50 +12,57 @@ gameDef* g_def;
 gameState* g_state;
 //--------------------------------------------//
 
+const char* color_state1[7] = {"../images/regular/state1/blue.png", "../images/regular/state1/green.png", "../images/regular/state1/orange.png",
+                              "../images/regular/state1/purple.png", "../images/regular/state1/red.png", "../images/regular/state1/yellow.png"
+                                "../images/regular/state1/nocolor.png"};
+
+
+// int main(int argc, char** argv){
 
 
 
-int main(int argc, char** argv){
+//   g_def = new gameDef();
+//   deserialize(argv[1], g_def);
+
+//   for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
+//     for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
+//       //cout << "reteriving row: " << r << " col: " << c <<endl;
+//       void * temp = g_def->get_extensionColor_element(r, c);
+//       cout << " " << *(int*)temp;
+//     }
+//   }   
+//   cout << "-----------" <<endl;
+//   for (int r = 0; r< g_def->get_boardState_rows(); r++){
+//     for (int c = 0; c< g_def->get_boardState_cols(); c++){
+//       void * temp = g_def->get_boardState_element(r, c);
+//       cout << " " << *(int*)temp;
+//     }
+//   } 
+//  cout << "-----------" <<endl;
+
+//  g_state = new gameState();
+//  g_state -> initialize(g_def);
 
 
-
-  g_def = new gameDef();
-  deserialize(argv[1], g_def);
-
-  for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
-    for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
-      //cout << "reteriving row: " << r << " col: " << c <<endl;
-      void * temp = g_def->get_extensionColor_element(r, c);
-      cout << " " << *(int*)temp;
-    }
-  }   
-  cout << "-----------" <<endl;
-  for (int r = 0; r< g_def->get_boardState_rows(); r++){
-    for (int c = 0; c< g_def->get_boardState_cols(); c++){
-      void * temp = g_def->get_boardState_element(r, c);
-      cout << " " << *(int*)temp;
-    }
-  } 
- cout << "-----------" <<endl;
-
- g_state = new gameState();
- g_state -> initialize(g_def);
-
-
-  delete g_def;
-  delete g_state;
+//   delete g_def;
+//   delete g_state;
 
   
-  return 0;
+//   return 0;
+// }
+
+
+
+
+
+
+
+void model_initialize(char* file){
+  g_def = new gameDef();
+  deserialize(file);
+  g_state = new gameState();
+  g_state->initialize(g_def);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -97,7 +104,7 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
 
 
 //read json and load into 2d array arr
-void deserialize(char* file, gameDef* g_def){
+void deserialize(char* file){
 
     json_t* json = json_load_file(file, JSON_COMPACT, NULL);
 

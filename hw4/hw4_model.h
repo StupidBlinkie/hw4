@@ -2,6 +2,7 @@
 #define _HW4_MODEL_H_
 
 #include <vector>
+#include <iostream>
 using namespace std;
 
 extern "C"{
@@ -249,7 +250,8 @@ inline gameState::~gameState(void){
 
 
 void deserialize2dArray(json_t *json, bool reading_first_array);
-void deserialize(char* file, gameDef* g_def);
+void deserialize(char* file);
+void model_initialize(char* file);
 
 
 #endif // _HW4_MODEL_H_
