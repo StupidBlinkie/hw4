@@ -9,6 +9,21 @@ extern "C"{
     #include "../jansson/include/jansson.h"
 }
 
+class candy{
+public:
+  candy(int t, int c);
+    int get_type() const {return type;}
+    int get_color() const {return color;}
+    void set_type(int t)  { type = t;}
+    void set_color(int c) { color = c;}
+private:
+	int type;
+	int color;
+};
+inline candy::candy(int t, int c){
+  type = t;
+  color = c;
+}
 
 
 
@@ -125,6 +140,83 @@ inline gameDef::~gameDef(void){
 	free_extensionColor();  //adding this.. 16 direct loss, 32 indirect
 	free_boardState(); // adding this.. 0 lost, 0 indirect lost, still has errors
 }
+
+
+
+
+
+class gameState{
+	private: 
+		int rows, cols;
+		int gameID;
+		int movesMade = 0;
+		int currScore = 0;
+		int* extensionOffset;
+
+		int* internal_extencolor;
+		int* internal_boardstate;
+		candy** internal_boardCandies; // internal candy array 
+
+		Array2dPtr boardCandies;
+		Array2dPtr boardState;
+	public:
+		//void set_rowsAndCols(int r, int c){rows = r; cols = c;}
+		void set_gameID(int id) { gameID = id; }
+		void incre_movesMade()  { movesMade += 1; }
+		void incre_Score(int s) { currScore += s; }
+		int get_movesMade() {return movesMade; }
+		int get_currScore() {return currScore; }
+		int get_gameID()	{return gameID; }	
+
+		void initialize(gameDef* &g_def);	
+		void update();
+	
+};
+
+
+inline void gameState::initialize(gameDef* &g_def){
+	int rows = g_def->get_boardState_rows();
+	int cols = g_def->get_boardState_cols();
+
+	//initialize offset array
+	extensionOffset = (int*)malloc(rows * cols * sizeof(int));
+	internal_boardCandies = (candy**)malloc(rows * cols * sizeof(candy*));
+
+
+
+	//create canides and store in internal serial array storage
+	for(int r=0; r<rows; r++){
+		for (int c = 0; c<cols; c++){
+		  int color = *(int*)g_def->get_extensionColor_element(r, c);
+		  int type = *(int*)g_def->get_boardState_element(r,c);
+		  candy* ca = new candy(type, color);
+		  internal_boardCandies[ r * cols + c] = ca;   //new candy object with color and type
+		}
+	}
+
+	//load to boardCandies 2d array
+	boardCandies = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+	for (int r=0; r<rows; r++) {
+	  for (int c=0; c<cols; c++) {
+	       A2d_FillArray2d(boardCandies, r, c, &internal_boardCandies[r * cols + c]);
+	   }
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void deserialize2dArray(json_t *json, bool reading_first_array);
 void deserialize(char* file, gameDef* g_def);

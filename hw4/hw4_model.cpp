@@ -23,6 +23,7 @@ int *extensionOffset;
 int* currBoardStateArr;
 
 gameDef* g_def;
+gameState* g_state;
 
 //--------------------------------------------//
 
@@ -39,48 +40,19 @@ int main(int argc, char** argv){
   // state = {1,1,1,1};
 
    g_def = new gameDef();
-  
+   g_state = new gameState();
+   g_state->initialize(g_def);
 
-  
-  deserialize(argv[1], g_def);
 
-  for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
-    for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
-      //cout << "reteriving row: " << r << " col: " << c <<endl;
-      void * temp = g_def->get_extensionColor_element(r, c);
-      cout << "data: " << *(int*)temp <<endl;
-    }
-  }   
-  cout << "-----------" <<endl;
-  for (int r = 0; r< g_def->get_boardState_rows(); r++){
-    for (int c = 0; c< g_def->get_boardState_cols(); c++){
-      void * temp = g_def->get_boardState_element(r, c);
-      cout << "boardState_data: " << *(int*)temp <<endl;
-    }
-  } 
 
+   cout<< c->get_type() << c->get_color() << endl;
+
+
+   
   delete g_def;
-  
+  delete c;
   return 0;
 }
-
-//********......notes.....*******//
-//I modified gamedef class, it should prevent leaks from deserialzation now
-//however I didn't figure out how you read data from json file, I think I 
-//messed up with the iterator order..
-//so basically I want to read in the following order..(same as 25by5.json)
-//extension color 2da --> 
-// board state 2da --> 
-// movesAllowed -->
-// gameid -->
-// colors
-
-// Can you look at the deserialize function and modify the iterating order?
-// I'm little confused. 
-// the rows and cols I extract from json are both 0. I must used the jansson
-// methods wrong.
-
-
 
 void deserialize2dArray(json_t *json, bool reading_first_array){
     //read rows
@@ -99,7 +71,6 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
     int* data = (int*)malloc(rows * cols *sizeof(int));
         for (size_t i = 0; i < json_array_size(json_data); i++) {
             data[i] = json_integer_value(json_array_get(json_data, i));
-	    cout<< data[i] << endl;
     }
 	cout << "made it past for loop" << endl;
     //load to different fileds of g_def
