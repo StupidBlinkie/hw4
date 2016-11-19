@@ -44,9 +44,6 @@ class gameDef{
  	void* get_extensionColor_element(int row, int col);
  	void* get_boardState_element(int row, int col);
 
-	void free_extensionColor();
-	void free_boardState();
-
 	~gameDef(void);
 };
 
@@ -102,43 +99,34 @@ inline void* gameDef::get_boardState_element(int row, int col){
 	return A2d_GetElement(boardState, row, col);
 }
 
-inline void gameDef::free_extensionColor(){ 
+
+inline gameDef::~gameDef(void){
+  cout << "gameDef Object is being deleted" << endl;
   free(extensionColor->storage);
   free(extensionColor);
   free(internal_extencolor);
-}
-inline void gameDef::free_boardState(){
   free(boardState->storage);
   free(boardState);
   free(internal_boardstate);
 }
 
 
-inline gameDef::~gameDef(void){
-	cout << "gameDef Object is being deleted" << endl;
-	free_extensionColor();  
-	free_boardState();
-}
-
-
 
 //----------------Candy Class-------------------//
-
-
 class candy{
-public:
-    candy(int t, int c);
-    int get_type() const {return type;}
-    int get_color() const {return color;}
-    void set_type(int t)  { type = t;}
-    void set_color(int c) { color = c;}
-private:
-	int type;
-	int color;
-};
-inline candy::candy(int t, int c){
-  type = t;
-  color = c;
+	public:
+	    candy(int t, int c);
+	    int get_type() const {return type;}
+	    int get_color() const {return color;}
+	    void set_type(int t)  { type = t;}
+	    void set_color(int c) { color = c;}
+	private:
+		int type;
+		int color;
+	};
+	inline candy::candy(int t, int c){
+	  type = t;
+	  color = c;
 };
 
 
@@ -166,17 +154,17 @@ class gameState{
 		void incre_Score(int s) { currScore += s; }
 		int get_movesMade() {return movesMade; }
 		int get_currScore() {return currScore; }
-		int get_gameID()	{return gameID; }	
-      int get_rows() {return rows;}
-      int get_cols() {return cols;}
+		int get_gameID()	{return gameID; }	   
+	    int get_rows()  const {return rows;}
+	    int get_cols()  const {return cols;}
 
-      void* get_boardState_element(int row, int col);
-      void set_boardState_element(int row, int col, void* value);
-      
-      void* get_candy_element(int row, int col);
-      void set_candy_element(int row, int col, void* value);
-      
-      void swap_candy_elements(int row1, int col1, int row2, int col2);
+	    void* get_boardState_element(int row, int col);
+	    void set_boardState_element(int row, int col, void* value);
+	      
+	    void* get_candy_element(int row, int col);
+	    void set_candy_element(int row, int col, void* value);
+	      
+	    void swap_candy_elements(int row1, int col1, int row2, int col2);
       
 		void initialize(gameDef* &g_def);	
 		//void update();
@@ -251,10 +239,6 @@ inline void gameState::initialize(gameDef* &g_def){
 
 }
 
-
-
-
-
 //destructor
 inline gameState::~gameState(void){
 	free(extensionOffset);	
@@ -277,9 +261,18 @@ inline gameState::~gameState(void){
 }
 
 
-bool applyTemplate();
+
+
+//-----------------model functions declaration---------------//
+void model_initialize(char* file);
 void deserialize2dArray(json_t *json, bool reading_first_array);
-void deserialize(char* file, gameDef* g_def);
+void deserialize(char* file);
+
+
+
+
+
+bool applyTemplate();
 
 
 #endif // _HW4_MODEL_H_
