@@ -2,7 +2,7 @@
 // #include "hw3_view.h"
 
 #include "hw4.h"
-#include "hw4_new_model.h"
+#include "hw4_model.h"
 #include "hw4_controller.h"
 #include "hw4_view.h"
 
@@ -34,15 +34,17 @@ void swap_buttons(int target_row, int target_col) {
 
    // printf("selected: %d, %d\n", selected_row, selected_col);
    // printf("to be swapped with: %d, %d\n", target_row, target_col);
+   cout << "target color:   " << target_row << ", " << target_col << endl;
 
    // get the indexes for the candies in temp_data
    int selected_candy = ((candy*)g_state->get_candy_element(selected_row, selected_col))->get_color();
    int target_candy = ((candy*)g_state->get_candy_element(target_row, target_col))->get_color();
+
    
    //update arr (2d array swap function, could make a swap function in model)
    
-   cout << "selected coor:   " << selected_row << ", " << selected_col << endl;
-   cout << "target coor:     " << target_row << ", " << target_col << endl;
+   cout << "selected color:   " << selected_row << ", " << selected_col << endl;
+   cout << "target color:     " << target_row << ", " << target_col << endl;
    g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col); 
    if (applyTemplate()) {
       view_redraw_grid();
@@ -87,7 +89,7 @@ void swap_up(GtkWidget *widget, gpointer  data){
 // connected to down arrow button
 void swap_down(GtkWidget *widget, gpointer  data){
    if (selected_candy_bool && moves_left > 0) {
-      if (selected_row != 9) {
+      if (selected_row != g_state->get_rows() - 1) {
          swap_buttons(selected_row + 1, selected_col);
     //      selected_candy_bool = 0;
 //          moves_left--;
@@ -131,7 +133,7 @@ void swap_left(GtkWidget *widget, gpointer  data){
 // connected to right arrow button
 void swap_right(GtkWidget *widget, gpointer  data){
   if (selected_candy_bool && moves_left > 0) {
-      if (selected_col != 9) {
+      if (selected_col != g_state->get_cols() - 1) {
          swap_buttons(selected_row, selected_col + 1);
        //   selected_candy_bool = 0;
 //          moves_left--;
