@@ -167,7 +167,17 @@ class gameState{
 		int get_movesMade() {return movesMade; }
 		int get_currScore() {return currScore; }
 		int get_gameID()	{return gameID; }	
+      int get_rows() {return rows;}
+      int get_cols() {return cols;}
 
+      void* get_boardState_element(int row, int col);
+      void set_boardState_element(int row, int col, void* value);
+      
+      void* get_candy_element(int row, int col);
+      void set_candy_element(int row, int col, void* value);
+      
+      void swap_candy_elements(int row1, int col1, int row2, int col2);
+      
 		void initialize(gameDef* &g_def);	
 		//void update();
 
@@ -175,6 +185,26 @@ class gameState{
 		~gameState(void);
 	
 };
+
+inline void* gameState::get_boardState_element(int row, int col){
+	return A2d_GetElement(boardState, row, col);
+}
+
+inline void gameState::set_boardState_element(int row, int col, void* value){
+	A2d_FillArray2d(boardState, row, col, value);
+}
+
+inline void* gameState::get_candy_element(int row, int col){
+	return A2d_GetElement(boardCandies, row, col);
+}
+
+inline void gameState::set_candy_element(int row, int col, void* value){
+	A2d_FillArray2d(boardCandies, row, col, value);
+}
+
+inline void gameState::swap_candy_elements(int row1, int col1, int row2, int col2){
+	A2d_Swap(boardCandies, row1, col1, row2, col2);
+}
 
 
 inline void gameState::initialize(gameDef* &g_def){
@@ -247,7 +277,7 @@ inline gameState::~gameState(void){
 }
 
 
-
+bool applyTemplate();
 void deserialize2dArray(json_t *json, bool reading_first_array);
 void deserialize(char* file, gameDef* g_def);
 
