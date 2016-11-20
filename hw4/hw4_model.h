@@ -545,7 +545,11 @@ inline gameState::~gameState(void){
 //-----------------model functions declaration---------------//
 void model_initialize(char* file);
 void deserialize2dArray(json_t *json, bool reading_first_array);
+<<<<<<< HEAD
 void deserialize(char* file);
+=======
+void deserialize(char* file, gameDef* g_def);
+>>>>>>> parent of 918728c... gtk errors fixed, but unable to run
 
 
 

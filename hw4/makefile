@@ -1,8 +1,13 @@
 <<<<<<< HEAD
 CC=g++
 
+<<<<<<< HEAD
 SRC= hw4_model.cpp hw4_view.cpp hw4_controller.cpp
 HEADERS= hw4_model.h hw4_view.h hw4_controller.h hw4.h
+=======
+SRC=hw4_model.cpp
+HEADERS= hw4_model.h
+>>>>>>> parent of 918728c... gtk errors fixed, but unable to run
 
 LIBS=../hw2/libhw2.a
 CFLAGS = -Wall -std=c++11 
