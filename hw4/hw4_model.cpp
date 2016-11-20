@@ -22,64 +22,11 @@ int moves_left = 30;
 
 gameDef* g_def;
 gameState* g_state;
-<<<<<<< HEAD
 
 
 void model_initialize(char* file){
     g_def = new gameDef();
     g_state = new gameState();
-=======
-//--------------------------------------------//
-
-
-
-
-int main(int argc, char** argv){
-
-
-
-  g_def = new gameDef();
-  deserialize(argv[1], g_def);
-
-  for (int r = 0; r< g_def->get_extensionColor_rows(); r++){
-    for (int c = 0; c< g_def->get_extensionColor_cols(); c++){
-      //cout << "reteriving row: " << r << " col: " << c <<endl;
-      void * temp = g_def->get_extensionColor_element(r, c);
-      cout << " " << *(int*)temp;
-    }
-  }   
-  cout << "-----------" <<endl;
-  for (int r = 0; r< g_def->get_boardState_rows(); r++){
-    for (int c = 0; c< g_def->get_boardState_cols(); c++){
-      void * temp = g_def->get_boardState_element(r, c);
-      cout << " " << *(int*)temp;
-    }
-  } 
- cout << "-----------" <<endl;
-
- g_state = new gameState();
- g_state -> initialize(g_def);
-
-
-  delete g_def;
-  delete g_state;
-
-  
-  return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> parent of 918728c... gtk errors fixed, but unable to run
 
     deserialize(file);
     g_state->initialize(g_def);
@@ -121,7 +68,7 @@ void deserialize2dArray(json_t *json, bool reading_first_array){
 }
 
 //read json and load into 2d array arr
-void deserialize(char* file, gameDef* g_def){
+void deserialize(char* file){
 
     json_t* json = json_load_file(file, JSON_COMPACT, NULL);
     json_t* gamedef_json = json_object_get(json, "gamedef");
