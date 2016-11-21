@@ -15,14 +15,11 @@ int selected_candy_bool = 0;
 int moves_left = 30;
 
 //-----color file names-----//
-// const char* color_state1_files[7] = {"../images/regular/state1/blue.png", "../images/regular/state1/green.png", "../images/regular/state1/orange.png",
- //                             "../images/regular/state1/purple.png", "../images/regular/state1/red.png", "../images/regular/state1/yellow.png",
-   //                           "../images/regular/state1/nocolor.png"};
 
 
 gameDef* g_def;
 gameState* g_state;
-
+candy* FIREDSPOT = new candy(-1, -1); // special candy used to fill in fired slot before applying gravity
 
 void model_initialize(char* file){
     g_def = new gameDef();
@@ -100,8 +97,93 @@ void deserialize(char* file){
     g_state->initialize(g_def);
 }
 
-bool applyTemplate() {
-   return true;
+
+
+
+
+//game logic 
+
+
+bool model_template_match(){
+ 
+    bool find_matching = false;
+
+    //v4  -- check 2 row is enough-----from 0 to (board height - 4 + 1) row
+    for (int r = 0; r < g_state->get_rows() - 4 + 1; r++){
+        for(int c = 0; c < g_state->get_cols(); c++){
+            if (find_pattern_vFour(r, c)){
+                cout<<"after find_pattern_vFour..r = " << r << ", c = " << c <<endl;
+                g_state->update_extensionOffset(c, 4);
+                find_matching = true;
+            }           
+        }
+    }
+    //h4 -- check 2 col is enough -----from 0 to (board width - 4 + 1) col
+    for (int r = 0; r < g_state->get_rows(); r++){
+        for(int c = 0; c < g_state->get_cols() -4 + 1; c++){
+            if (find_pattern_hFour(r, c)){
+                cout<<"after find_pattern_hFour..r = " << r << ", c = " << c <<endl;
+                for(int count = 0 ; count < 4; count++){
+                    g_state->update_extensionOffset(count + c, 1);
+                }
+                find_matching = true;
+            }
+        }
+    }   
+    return find_matching;
+}
+
+bool find_pattern_vFour(int row, int col){
+    cout << "inside find_pattern_vFour, row = " << row << " col = " << col << endl;
+    candy* curr = (candy*)g_state->get_candy_element(row, col);
+    if (curr == NULL || curr->get_color() == -1){  // color = -1 means it's a firedspot
+        return false;
+    }
+
+    int color = curr->get_color();
+    int count = 1;
+
+    candy* above = (candy*)g_state->get_candy_element(row + count, col);
+    while (above != NULL && above->get_color() != -1 && count < 4){     
+        if(above->get_color() == color){
+            count++;
+            above = (candy*)g_state->get_candy_element(row + count, col);
+        }else{
+            return false;
+        }
+    }
+
+    //remove candies 
+    for(int i = 0; i < count; i++){
+        g_state->set_candy_element(row + i, col, FIREDSPOT); //set fired candies to FIREDSPOT in boardCandies
+    }
+    return true;
+}
+bool find_pattern_hFour(int row, int col){
+    cout << "inside find_pattern_hFour, row = " << row << " col = " << col << endl;
+    candy* curr = (candy*)g_state->get_candy_element(row, col);
+    if (curr == NULL || curr->get_color() == -1){  // color = -1 means it's a firedspot
+        return false;
+    }
+
+    int color = curr->get_color();
+    int count = 1;
+
+    candy* next = (candy*)g_state->get_candy_element(row, col + count);
+    while (next != NULL && next->get_color() != -1 && count < 4){       
+        if(next->get_color() == color){
+            count++;
+            next = (candy*)g_state->get_candy_element(row + count, col);
+        }else{
+            return false;
+        }
+    }
+
+    //remove candies 
+    for(int i = 0; i < count; i++){
+        g_state->set_candy_element(row, col + i, FIREDSPOT); //set fired candies to FIREDSPOT in boardCandies
+    }
+    return true;
 }
 
 

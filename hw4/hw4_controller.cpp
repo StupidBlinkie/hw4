@@ -39,22 +39,20 @@ void swap_buttons(int target_row, int target_col) {
    cout << "selected color:   " << selected_row << ", " << selected_col << endl;
    cout << "target color:     " << target_row << ", " << target_col << endl;
    
-   g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col); 
-   if (applyTemplate()) {
+   g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col);
+   //use boardcanides to determine firing
+
+   if (model_template_match()) {
       view_redraw_grid();
       selected_candy_bool = 0;
       moves_left--;
       view_update_moves_label();
-   } else {
+   } 
+
+   else {
       g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col); 
    }
-   //update view
-  // view_destroy_candy(selected_col, selected_row);
-  // view_destroy_candy(target_col, target_row);
 
-   //create target candy in selected slot, and selected candy in target solt
-   //view_create_candy(selected_candy, target_row, target_col);
-   //view_create_candy(target_candy, selected_row, selected_col);
 }
 
 

@@ -167,7 +167,7 @@ class gameState{
 	    void swap_candy_elements(int row1, int col1, int row2, int col2);
       
 		void initialize(gameDef* &g_def);	
-		//void update();
+		void update_extensionOffset(int col, int value){extensionOffset[col] += value;}
 
 		void free_gameState();
 		~gameState(void);
@@ -202,7 +202,10 @@ inline void gameState::initialize(gameDef* &g_def){
 	cout << "[gameState initialize]---rows, cols .."<< rows <<", "<< cols << endl;
 
 	//STEP 1: initialize 
-	extensionOffset = (int*)malloc(rows * sizeof(int));
+	extensionOffset = (int*)malloc(cols * sizeof(int));
+	for (int i = 0; i < cols; i++){
+		extensionOffset[i] = 0;
+	}
 	internal_boardCandies = (candy**)malloc(rows * cols * sizeof(candy*));
 	internal_boardState= (int*)malloc(rows * cols * sizeof(int));
 
@@ -270,9 +273,10 @@ void deserialize(char* file);
 
 
 
+//game logic function
 
-
-bool applyTemplate();
-
+bool model_template_match();
+bool find_pattern_vFour(int row, int col);
+bool find_pattern_hFour(int row, int col);
 
 #endif // _HW4_MODEL_H_
