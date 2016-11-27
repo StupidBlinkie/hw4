@@ -1,6 +1,3 @@
-// #include "hw3.h"
-// #include "hw3_view.h"
-
 #include "hw4.h"
 #include "hw4_model.h"
 #include "hw4_controller.h"
@@ -19,6 +16,8 @@ extern GtkWidget *window;
 
 // connected to each candy to set the row
 void set_row(GtkWidget *widget, gpointer  data) {
+   //remove current selected button's focus when selecting a new candy
+   unselect_current_active_button();
    selected_row = (long) data;
 }
 
@@ -31,48 +30,40 @@ void set_col(GtkWidget *widget, gpointer  data) {
 
 
 void swap_buttons(int target_row, int target_col) {
-   // get the indexes for the candies in temp_data
-   int selected_candy = ((candy*)g_state->get_candy_element(selected_row, selected_col))->get_color();
-   int target_candy = ((candy*)g_state->get_candy_element(target_row, target_col))->get_color();
 
-   
-   cout << "selected color:   " << selected_row << ", " << selected_col << endl;
-   cout << "target color:     " << target_row << ", " << target_col << endl;
-   
+   // get the indexes for the candies in temp_data
+   //int selected_candy = ((candy*)g_state->get_candy_element(selected_row, selected_col))->get_color();
+   //int target_candy = ((candy*)g_state->get_candy_element(target_row, target_col))->get_color();
+  
    g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col); 
+
    if (applyTemplate()) {
       view_redraw_grid();
       selected_candy_bool = 0;
-      moves_left--;
+      g_state->incre_movesMade();
       view_update_moves_label();
-   } else {
-      g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col); 
-   }
-   //update view
-  // view_destroy_candy(selected_col, selected_row);
-  // view_destroy_candy(target_col, target_row);
+      view_update_score_label();
+   } 
 
-   //create target candy in selected slot, and selected candy in target solt
-   //view_create_candy(selected_candy, target_row, target_col);
-   //view_create_candy(target_candy, selected_row, selected_col);
+   else {
+      g_state->swap_candy_elements(selected_row, selected_col, target_row, target_col);
+      unselect_current_active_button(); 
+   }
+
 }
 
 
 
 
 // connected to up arrow button
-void swap_up(GtkWidget *widget, gpointer  data){
+void swap_down(GtkWidget *widget, gpointer  data){
    if (selected_candy_bool && moves_left > 0) {
-      if (selected_row != g_state->get_rows() - 1) {
-         swap_buttons(selected_row + 1, selected_col);  //passing target candy coordinates
+      if (selected_row != 0) {
+         swap_buttons(selected_row - 1, selected_col);
       }
       else{
-         //unselect the button if can't be swapped
-
-         gtk_toggle_button_set_active 
-            ((GtkToggleButton*)gtk_grid_get_child_at(GTK_GRID (grid), selected_col, g_state->get_rows() - 1 - selected_row),
-            false);
-         g_print ("can't swap\n");
+         //unselect the button if can;t be swapped
+         unselect_current_active_button();
       }
    }
 
@@ -82,16 +73,13 @@ void swap_up(GtkWidget *widget, gpointer  data){
 }
 
 // connected to down arrow button
-void swap_down(GtkWidget *widget, gpointer  data){
+void swap_up(GtkWidget *widget, gpointer  data){
    if (selected_candy_bool && moves_left > 0) {
-      if (selected_row != 0) {
-         swap_buttons(selected_row - 1, selected_col);
+      if (selected_row != g_state->get_rows() - 1) {
+         swap_buttons(selected_row + 1, selected_col);
       }
       else{
-         gtk_toggle_button_set_active 
-            ((GtkToggleButton*) gtk_grid_get_child_at(GTK_GRID (grid), selected_col, g_state->get_rows() - 1 - selected_row),
-            false);
-         //g_print ("can't swap\n");
+         unselect_current_active_button();
       }
    }
 
@@ -107,10 +95,7 @@ void swap_left(GtkWidget *widget, gpointer  data){
          swap_buttons(selected_row, selected_col - 1);
       }
       else{
-         gtk_toggle_button_set_active 
-            ((GtkToggleButton*) gtk_grid_get_child_at(GTK_GRID (grid), selected_col, g_state->get_rows() - 1 - selected_row),
-            false);
-         //g_print ("can't swap\n");
+         unselect_current_active_button();
       }
    }
 
@@ -126,14 +111,18 @@ void swap_right(GtkWidget *widget, gpointer  data){
          swap_buttons(selected_row, selected_col + 1);
       }
       else{
-         gtk_toggle_button_set_active 
-            ((GtkToggleButton*) gtk_grid_get_child_at(GTK_GRID (grid), selected_col, g_state->get_rows() - 1 - selected_row),
-            false);
-         //g_print ("can't swap\n");
+         unselect_current_active_button();
       }
    }
 
    else{
       g_print("must select a candy!\n");
    }
+}
+
+
+void unselect_current_active_button(){
+   gtk_toggle_button_set_active(
+      (GtkToggleButton*)gtk_grid_get_child_at(GTK_GRID (grid), selected_col, g_state->get_rows() - 1 - selected_row), 
+      false);   
 }

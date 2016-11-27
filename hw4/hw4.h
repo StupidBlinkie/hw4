@@ -1,3 +1,5 @@
+#ifndef _HW4_H_
+#define _HW4_H_
 
 extern "C"{
 	#include "../hw2/array2d.h"
@@ -5,9 +7,9 @@ extern "C"{
    #include <gtk/gtk.h>
 }
 
-#include <vector>
+// #include <vector>
 #include <iostream>
 
-// #include "hw4_model.h"
-// #include "hw4_controller.h"
-// #include "hw4_view.h"
+
+
+#endif // _HW4_H_

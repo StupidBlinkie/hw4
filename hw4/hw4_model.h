@@ -1,7 +1,7 @@
 #ifndef _HW4_MODEL_H_
 #define _HW4_MODEL_H_
 
-#include <vector>
+
 using namespace std;
 
 extern "C"{
@@ -13,7 +13,6 @@ extern "C"{
 
 class gameDef{
  private:
- 	//gameDefinition();
  	int gameID;
 	int movesAllowed;
  	int colors;
@@ -53,13 +52,10 @@ inline void gameDef::set_extensionColor(int rows, int cols,int* data_from_json){
 	extensionColor_row = rows;
 	extensionColor_col = cols;
 	internal_extencolor = (int*)malloc(rows * cols * sizeof(int));
-	//cout << "allocated space for int*" << endl;
+
 	for(int i=0; i<rows*cols; i++){
 		internal_extencolor[i] = data_from_json[i];
-		//cout << internal_extencolor[i];
 	}
-	//cout << "copied data from prev int*" << endl;
-	//free(data_from_json);
 
 	//fill 2d array
 	extensionColor = A2d_AllocateArray2d(rows, cols, sizeof(void*));
@@ -79,7 +75,6 @@ inline void gameDef::set_boardState(int rows, int cols,int* data_from_json){
 	for(int i=0; i<rows*cols; i++){
 		internal_boardstate[i] = data_from_json[i];
 	}
-	//free(data_from_json);
 
 	boardState = A2d_AllocateArray2d(rows, cols, sizeof(void*));
 	
@@ -101,7 +96,7 @@ inline void* gameDef::get_boardState_element(int row, int col){
 
 
 inline gameDef::~gameDef(void){
-  cout << "gameDef Object is being deleted" << endl;
+  //cout << "gameDef Object is being deleted" << endl;
   free(extensionColor->storage);
   free(extensionColor);
   free(internal_extencolor);
@@ -141,7 +136,6 @@ class gameState{
 		int currScore = 0;
 		int* extensionOffset;
 
-		//int* internal_extencolor; //not used
 		int* internal_boardState;
 		candy** internal_boardCandies; // internal candy array 
 
@@ -151,23 +145,32 @@ class gameState{
 		//void set_rowsAndCols(int r, int c){rows = r; cols = c;}
 		void set_gameID(int id) { gameID = id; }
 		void incre_movesMade()  { movesMade += 1; }
-		void incre_Score(int s) { currScore += s; }
+		//oid incre_Score(int s) { currScore += s; }
 		int get_movesMade() {return movesMade; }
 		int get_currScore() {return currScore; }
 		int get_gameID()	{return gameID; }	   
 	    int get_rows()  const {return rows;}
 	    int get_cols()  const {return cols;}
+       
 
 	    void* get_boardState_element(int row, int col);
-	    void set_boardState_element(int row, int col, void* value);
+	    void set_boardState_element(int row, int col, int value);
 	      
 	    void* get_candy_element(int row, int col);
-	    void set_candy_element(int row, int col, void* value);
-	      
-	    void swap_candy_elements(int row1, int col1, int row2, int col2);
+	    void set_candy_element(int row, int col, void* value);       
+        void swap_candy_elements(int row1, int col1, int row2, int col2);
+        int get_candy_color(int row, int col);
+        int get_candy_type(int row, int col);   
+      	void set_candy_color(int row, int col, int color);
+      	void set_candy_type(int row, int col, int type);
       
-		void initialize(gameDef* &g_def);	
-		//void update();
+
+      	void decrement_boardState_element(int row, int col);
+      
+      	int get_extensionOffset(int col);
+      	void set_extensionOffset(int col, int value);
+	      
+		void initialize(gameDef* &g_def, json_t *boardstate_json);	
 
 		void free_gameState();
 		~gameState(void);
@@ -178,8 +181,8 @@ inline void* gameState::get_boardState_element(int row, int col){
 	return A2d_GetElement(boardState, row, col);
 }
 
-inline void gameState::set_boardState_element(int row, int col, void* value){
-	A2d_FillArray2d(boardState, row, col, value);
+inline void gameState::set_boardState_element(int row, int col, int value){
+	*((int*)get_boardState_element(row, col)) = value;
 }
 
 inline void* gameState::get_candy_element(int row, int col){
@@ -190,53 +193,111 @@ inline void gameState::set_candy_element(int row, int col, void* value){
 	A2d_FillArray2d(boardCandies, row, col, value);
 }
 
+inline int gameState::get_candy_color(int row, int col) {
+   return ((candy*)get_candy_element(row, col))->get_color();
+}
+
+inline void gameState::set_candy_color(int row, int col, int color) {
+   ((candy*)get_candy_element(row, col))->set_color(color);
+}
+
+inline int gameState::get_candy_type(int row, int col) {
+   return ((candy*)get_candy_element(row, col))->get_type();
+}
+
+inline void gameState::set_candy_type(int row, int col, int type) {
+   ((candy*)get_candy_element(row, col))->set_type(type);
+}
+
+
+
+//decre board state and incre score
+inline void gameState::decrement_boardState_element(int row, int col) {
+   int num = *(int*) get_boardState_element(row, col);
+   if (num > 0) {
+      set_boardState_element(row, col, num - 1);
+      currScore++;
+   }
+}
+
+inline int gameState::get_extensionOffset(int col) {
+   return extensionOffset[col];
+}
+
+inline void gameState::set_extensionOffset(int col, int value) {
+   extensionOffset[col] = value;
+}
+
 inline void gameState::swap_candy_elements(int row1, int col1, int row2, int col2){
 	A2d_Swap(boardCandies, row1, col1, row2, col2);
 }
 
 
-inline void gameState::initialize(gameDef* &g_def){
+inline void gameState::initialize(gameDef* &g_def, json_t *gamestate_json){
 	rows = g_def->get_boardState_rows();
 	cols = g_def->get_boardState_cols();
 
-	cout << "[gameState initialize]---rows, cols .."<< rows <<", "<< cols << endl;
 
-	//STEP 1: initialize 
 	extensionOffset = (int*)malloc(rows * sizeof(int));
 	internal_boardCandies = (candy**)malloc(rows * cols * sizeof(candy*));
 	internal_boardState= (int*)malloc(rows * cols * sizeof(int));
-
-	//STEP 2: create canides and store in internal serial array storages
-	for(int r=0; r<rows; r++){
-		for (int c = 0; c<cols; c++){
-		  int color = *(int*)g_def->get_extensionColor_element(r, c);
-		  int type = *(int*)g_def->get_boardState_element(r,c);
-		  
-		//allocate memeory on heap for each candy, remember to free
-		  internal_boardCandies[r * cols + c] = new candy(type, color); 
-		  internal_boardState[r * cols + c] = type;
-		  //cout << "[gameState initialize]-- internal candy array.. type & color ---" << internal_boardCandies[ r * cols + c]->get_type() << " "<< internal_boardCandies[ r * cols + c]->get_color() << endl;
-		}
-	}
-
-	//STEP 3: load to boardCandies and boardState 2d arrays
 	boardCandies = A2d_AllocateArray2d(rows, cols, sizeof(void*));
 	boardState = A2d_AllocateArray2d(rows, cols, sizeof(void*));
+   
 
-	for (int r=0; r<rows; r++) {
-	  for (int c=0; c<cols; c++) {
-	       A2d_FillArray2d(boardCandies, r, c, internal_boardCandies[r * cols + c]);
-	       A2d_FillArray2d(boardState, r, c, &internal_boardState[r * cols + c]);
-		
+	if (gamestate_json == NULL) {
+	   for (int i = 0; i < cols; i++) {
+	      extensionOffset[i] = rows;
+	   }
 
-		//test (no need to dereference, it's already a candy pointer)
-		candy* temp = (candy*)A2d_GetElement(boardCandies, r , c );
-		int tem = *(int*)A2d_GetElement(boardState, r , c );
-		 cout << "[gameState initialize]-- candy 2d array.. type & color ---" << temp->get_type() << " "<< temp->get_color() << endl;
-		 cout << "[gameState initialize]-- state 2d array..  ---" << tem << endl;
+		for(int r=0; r<rows; r++){
+			for (int c = 0; c<cols; c++){
+			  int color = *(int*)g_def->get_extensionColor_element(r, c);
+			  int boardstate_element = *(int*)g_def->get_boardState_element(r,c);
+			  
+			  //allocate memeory on heap for each candy, remember to free
+			  internal_boardCandies[r * cols + c] = new candy(0, color); 
+			  internal_boardState[r * cols + c] = boardstate_element;
+			  //cout << "[gameState initialize]-- internal candy array.. type & color ---" << internal_boardCandies[ r * cols + c]->get_type() << " "<< internal_boardCandies[ r * cols + c]->get_color() << endl;
+			}
+		}		
+	} 
+	else {
+		json_t *candy_json = json_object_get(gamestate_json, "boardcandies");
+		json_t *boardstate_json = json_object_get(gamestate_json, "boardstate");
+		json_t *movesMade_json = json_object_get(gamestate_json, "movesmade");
+		json_t *score_json = json_object_get(gamestate_json, "currentscore");
+		json_t *extension_json = json_object_get(gamestate_json, "extensionoffset");
+		json_t *boardstate_elements_json = json_object_get(boardstate_json, "data");
+		json_t *candy_elements_data = json_object_get(candy_json, "data");
+		movesMade = json_integer_value(movesMade_json);
+		currScore = json_integer_value(score_json);
+
+		//set extensionOffset
+		for (int c=0; c <cols; c++) {
+			extensionOffset[c] = json_integer_value(json_array_get(extension_json, c));
+		}
+
+		for (int r=0; r<rows; r++) {
+			for (int c=0; c<cols; c++) {
+				internal_boardState[r * cols + c] = json_integer_value(json_array_get(boardstate_elements_json, r * cols + c));
+				json_t *candy_json_element = json_array_get(candy_elements_data, r * cols + c);
+				json_t *color_json = json_object_get(candy_json_element, "color");
+				json_t *type_json = json_object_get(candy_json_element, "type");
+				int color = json_integer_value(color_json);
+				int type = json_integer_value(type_json);
+
+				internal_boardCandies[r * cols + c] = new candy(type, color); 
+			}
 		}
 	}
 
+	for (int r=0; r<rows; r++) {
+		for (int c=0; c<cols; c++) {
+	       A2d_FillArray2d(boardCandies, r, c, internal_boardCandies[r * cols + c]);
+	       A2d_FillArray2d(boardState, r, c, &internal_boardState[r * cols + c]);
+		}
+	}
 }
 
 //destructor
@@ -247,10 +308,8 @@ inline gameState::~gameState(void){
 	free(boardCandies);
 	for (int r=0; r<rows; r++) {
 	  for (int c=0; c<cols; c++) {
-	   //cout<< internal_boardCandies[r * cols + c]->get_type() << internal_boardCandies[r * cols + c]->get_color()<< endl;
-	    //free(internal_boardCandies[r * cols + c]);
-	   delete internal_boardCandies[r * cols + c];  //use delete instead of free for objects
-         }
+	  	delete internal_boardCandies[r * cols + c];  //use delete instead of free for objects
+      }
 	}
 	free(internal_boardCandies);
 	
@@ -267,12 +326,17 @@ inline gameState::~gameState(void){
 void model_initialize(char* file);
 void deserialize2dArray(json_t *json, bool reading_first_array);
 void deserialize(char* file);
-
-
-
-
-
+void serialize();
 bool applyTemplate();
+bool VFour();
+bool HFour();
+bool VThree();
+bool HThree();
+bool checkVFour(int row, int col);
+bool checkHFour(int row, int col);
+bool checkVThree(int row, int col);
+bool checkHThree(int row, int col);
+void applyGravity();
 
 
 #endif // _HW4_MODEL_H_
